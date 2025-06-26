@@ -160,21 +160,35 @@ function App() {
   }
 
   const loadTasks = async () => {
+    // Adicionamos uma verificação para garantir que só buscamos tarefas se tivermos um usuário logado.
+    if (!currentUser) return; 
+
     try {
-      const token = localStorage.getItem('access_token')
-      const response = await fetch(`${API_BASE}/tasks`, {
+      const token = localStorage.getItem('access_token');
+
+      // Criamos a URL com o parâmetro de busca ?user_id=...
+      // Ele pega o ID do usuário que está no estado 'currentUser'.
+      const url = new URL(`${API_BASE}/tasks`);
+      url.searchParams.append('user_id', currentUser.id);
+
+      // Usamos a nova URL na requisição fetch.
+      const response = await fetch(url.toString(), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
+      });
+
       if (response.ok) {
-        const data = await response.json()
-        setTasks(data)
+        const data = await response.json();
+        setTasks(data);
+      } else {
+        // É uma boa prática ver o que o backend diz quando há um erro.
+        console.error('Falha ao carregar tarefas:', response.status, await response.text());
       }
     } catch (error) {
-      console.error('Erro ao carregar tarefas:', error)
+      console.error('Erro de conexão ao carregar tarefas:', error);
     }
-  }
+  };
 
   const loadUsers = async () => {
     try {
